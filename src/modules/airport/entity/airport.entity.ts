@@ -1,3 +1,4 @@
+import { PlanePosition } from 'src/modules/plane-position/entity/plane-position.entity';
 import { Runway } from 'src/modules/runway/entity/runway.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -17,6 +18,12 @@ export class Airport {
 
   @Column()
   isOperating: boolean;
+
+  @Column()
+  maxLoad: number;
+
+  @OneToMany(() => PlanePosition, (planePosition) => planePosition.airport)
+  planePositions: PlanePosition[];
 
   @OneToMany(() => Runway, (runway) => runway.airport)
   runways: Runway[];
