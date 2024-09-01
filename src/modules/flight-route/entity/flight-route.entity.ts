@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Airport } from 'src/modules/airport/entity/airport.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'flight_route' })
 export class FlightRoute {
@@ -10,4 +11,10 @@ export class FlightRoute {
 
   @Column('bigint')
   flightRoutePrice: string;
+
+  @ManyToOne(() => Airport)
+  departureAirport: Airport;
+
+  @ManyToOne(() => Airport)
+  arrivalAirport: Airport;
 }

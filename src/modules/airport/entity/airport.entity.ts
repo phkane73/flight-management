@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Runway } from 'src/modules/runway/entity/runway.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'airport' })
 export class Airport {
@@ -16,4 +17,7 @@ export class Airport {
 
   @Column()
   isOperating: boolean;
+
+  @OneToMany(() => Runway, (runway) => runway.airport)
+  runways: Runway[];
 }

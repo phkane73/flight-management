@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Airport } from 'src/modules/airport/entity/airport.entity';
+import { Plane } from 'src/modules/plane/entity/plane.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'plane_position' })
 export class PlanePosition {
@@ -10,4 +12,10 @@ export class PlanePosition {
 
   @Column('timestamp')
   readyTime: Date;
+
+  @ManyToOne(() => Plane)
+  plane: Plane;
+
+  @ManyToOne(() => Airport)
+  airport: Airport;
 }
