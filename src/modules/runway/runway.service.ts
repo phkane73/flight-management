@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/common/interface/error.interface';
 import { AirportService } from 'src/modules/airport/airport.service';
 import { CreateRunwayDto } from 'src/modules/runway/dto/create-runway.dto';
+import { UpdateRunwayDto } from 'src/modules/runway/dto/update-runway.dto';
 import { Runway } from 'src/modules/runway/entity/runway.entity';
 import { Repository } from 'typeorm';
 
@@ -45,6 +46,15 @@ export class RunwayService {
     return {
       code: 200,
       message: 'Delete runway successfully',
+    };
+  }
+
+  async updateRunway(updateRunwayDto: UpdateRunwayDto): Promise<Response<Runway>> {
+    const { id } = updateRunwayDto;
+    await this.runwayRepository.update(id, { ...updateRunwayDto });
+    return {
+      code: 200,
+      message: 'Update runway successfully',
     };
   }
 }

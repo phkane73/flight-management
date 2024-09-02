@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { Response } from 'src/common/interface/error.interface';
 import { CreateRunwayDto } from 'src/modules/runway/dto/create-runway.dto';
+import { UpdateRunwayDto } from 'src/modules/runway/dto/update-runway.dto';
 import { Runway } from 'src/modules/runway/entity/runway.entity';
 import { RunwayService } from './runway.service';
 
@@ -21,5 +22,10 @@ export class RunwayController {
   @Delete('delete/:id')
   removeRunway(@Param('id') id: number): Promise<Response<Runway>> {
     return this.runwayService.removeRunway(id);
+  }
+
+  @Patch('update')
+  updateRunway(@Body() updateRunwayDto: UpdateRunwayDto): Promise<Response<Runway>> {
+    return this.runwayService.updateRunway(updateRunwayDto);
   }
 }
