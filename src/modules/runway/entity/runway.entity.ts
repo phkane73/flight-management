@@ -1,4 +1,5 @@
 import { Airport } from 'src/modules/airport/entity/airport.entity';
+import { RunwayTypeEnum } from 'src/modules/runway/enum/runway-type.enum';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'runway' })
@@ -9,11 +10,11 @@ export class Runway {
   @Column({ length: 50 })
   runwayCode: string;
 
-  @Column({ length: 100 })
-  runwayType: string;
+  @Column()
+  runwayType: RunwayTypeEnum;
 
-  @Column('timestamp')
-  availableTime: Date;
+  @Column('timestamp', { nullable: true })
+  availableTime?: Date;
 
   @Column()
   isOperating: boolean;

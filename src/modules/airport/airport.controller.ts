@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { Response } from 'src/common/interface/error.interface';
 import { CreateAirportDto } from 'src/modules/airport/dto/create-airport.dto';
 import { UpdateAirportDto } from 'src/modules/airport/dto/update-airport.dto';
@@ -24,7 +24,7 @@ export class AirportController {
     return this.airportService.getOneAirport(id);
   }
 
-  @Put('update')
+  @Patch('update')
   update(@Body() updateAirportDto: UpdateAirportDto) {
     return this.airportService.updateAirport(updateAirportDto);
   }

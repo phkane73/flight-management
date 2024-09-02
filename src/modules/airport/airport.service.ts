@@ -51,6 +51,7 @@ export class AirportService {
         planePositions: {
           plane: true,
         },
+        runways: true,
       },
     });
   }
@@ -77,5 +78,9 @@ export class AirportService {
       code: 200,
       message: 'Update airport successfully',
     };
+  }
+
+  async findAirportById(id: number): Promise<Airport> {
+    return await this.airportRepository.findOneBy({ id });
   }
 }
