@@ -44,7 +44,12 @@ export class AirportService {
     return await this.airportRepository.find();
   }
 
+  async getAirportIsOperating(): Promise<Airport[]> {
+    return await this.airportRepository.findBy({ isOperating: true });
+  }
+
   async getOneAirport(id: number): Promise<Airport> {
+    if (!id) return null;
     return await this.airportRepository.findOne({
       where: { id },
       relations: {
@@ -81,6 +86,6 @@ export class AirportService {
   }
 
   async findAirportById(id: number): Promise<Airport> {
-    return await this.airportRepository.findOneBy({ id });
+    if (id) return await this.airportRepository.findOneBy({ id });
   }
 }

@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsBoolean, IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { RunwayTypeEnum } from 'src/modules/runway/enum/runway-type.enum';
 
@@ -11,6 +12,7 @@ export class CreateRunwayDto {
   runwayType: RunwayTypeEnum;
 
   @IsOptional()
+  @Type(() => Date)
   availableTime?: Date;
 
   @IsBoolean()

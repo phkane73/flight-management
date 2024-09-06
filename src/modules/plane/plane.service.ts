@@ -29,5 +29,17 @@ export class PlaneService {
       code: 200,
       message: 'Update plane successfully',
     };
-    }
+  }
+
+  async getAllPlane(): Promise<Plane[]> {
+    return await this.planeRepository.find();
+  }
+
+  async getPlaneIsOperating(): Promise<Plane[]> {
+    return await this.planeRepository.findBy({ isOperating: true });
+  }
+
+  async findPlaneById(id: number): Promise<Plane> {
+    if (id) return await this.planeRepository.findOneBy({ id });
+  }
 }

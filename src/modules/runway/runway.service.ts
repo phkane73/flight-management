@@ -17,12 +17,13 @@ export class RunwayService {
 
   async addRunway(createRunwayDto: CreateRunwayDto): Promise<Response<Runway>> {
     const airport = await this.airportService.findAirportById(createRunwayDto.airportId);
-    const runway = new Runway();
-    runway.airport = airport;
-    runway.availableTime = createRunwayDto.availableTime;
-    runway.isOperating = createRunwayDto.isOperating;
-    runway.runwayCode = createRunwayDto.runwayCode;
-    runway.runwayType = createRunwayDto.runwayType;
+    const runway = this.runwayRepository.create({
+      airport,
+      availableTime: createRunwayDto.availableTime,
+      isOperating: createRunwayDto.isOperating,
+      runwayCode: createRunwayDto.runwayCode,
+      runwayType: createRunwayDto.runwayType,
+    });
     try {
       await this.runwayRepository.save(runway);
       return {

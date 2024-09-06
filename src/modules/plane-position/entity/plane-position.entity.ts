@@ -10,8 +10,8 @@ export class PlanePosition {
   @Column('timestamp')
   startTime: Date;
 
-  @Column('timestamp')
-  readyTime: Date;
+  @Column('timestamp', { nullable: true })
+  endTime?: Date;
 
   @ManyToOne(() => Plane)
   plane: Plane;

@@ -8,5 +8,6 @@ import { Plane } from 'src/modules/plane/entity/plane.entity';
   imports:[TypeOrmModule.forFeature([Plane])],
   controllers: [PlaneController],
   providers: [PlaneService],
+  exports:[PlaneService]
 })
 export class PlaneModule {}

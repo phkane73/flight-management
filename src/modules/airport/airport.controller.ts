@@ -19,6 +19,11 @@ export class AirportController {
     return this.airportService.getAllAirport();
   }
 
+  @Get('get-operating')
+  getAirportIsOperating(): Promise<Airport[]> {
+    return this.airportService.getAirportIsOperating();
+  }
+
   @Get('get-one/:id')
   getOneAirport(@Param('id') id: number): Promise<Airport> {
     return this.airportService.getOneAirport(id);
