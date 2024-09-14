@@ -96,12 +96,28 @@ export class PlanePositionService {
   }
 
   async getAllPlanePosition(): Promise<PlanePosition[]> {
-    return await this.planePositionRepository.find({
+    return this.planePositionRepository.find({
       relations: {
         airport: true,
         plane: true,
       },
     });
+  }
+
+  async getAllPlaneAtAirport(airportId: number) {
+    const planePositionList = await this.planePositionRepository.find({
+      where: {
+        airport: {
+          id: airportId,
+        },
+        endTime: null,
+      },
+      relations: {
+        plane: true,
+      },
+    });
+    const allPlaneAtAirport = planePositionList.map((item) => item.plane);
+    return allPlaneAtAirport;
   }
 
   async movePlane(movePlaneDto: MovePlaneDto) {
@@ -110,3 +126,4 @@ export class PlanePositionService {
     const airport = await this.airportService.findAirportById(airportId);
   }
 }
+
