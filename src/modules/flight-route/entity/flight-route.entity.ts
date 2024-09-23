@@ -6,7 +6,7 @@ export class FlightRoute {
   @PrimaryGeneratedColumn({ name: 'flight_route_id' })
   id: number;
 
-  @Column()
+  @Column('bigint')
   flightRouteEstTime: number;
 
   @Column('bigint')

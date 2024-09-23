@@ -24,7 +24,6 @@ export class FlightRouteService {
         arrivalAirport: true,
       },
     });
-    flightRouteList.map((item) => console.log(item));
     const isExistFlightRoute = flightRouteList.find(
       (item) =>
         (item.departureAirport.id === departureAirportId &&
@@ -87,6 +86,22 @@ export class FlightRouteService {
     });
   }
 
+  async getFlightRouteByAirport(airportId1: number, airportId2: number) {
+    const result = await this.flightRouteRepository.findOne({
+      where: [
+        {
+          departureAirport: { id: airportId1 },
+          arrivalAirport: { id: airportId2 },
+        },
+        {
+          departureAirport: { id: airportId2 },
+          arrivalAirport: { id: airportId1 },
+        },
+      ],
+    });
+    return result || null;
+  }
+
   async updateFlightRoute(
     updateFlightRouteDto: UpdateFlightRouteDto,
   ): Promise<Response<FlightRoute>> {
@@ -106,8 +121,10 @@ export class FlightRouteService {
         message: 'Flight Route already exist',
       };
     }
-    const departureAirport = await this.airportService.findAirportById(departureAirportId);
-    const arrivalAirport = await this.airportService.findAirportById(arrivalAirportId);
+    const [departureAirport, arrivalAirport] = await Promise.all([
+      this.airportService.findAirportById(departureAirportId),
+      this.airportService.findAirportById(arrivalAirportId),
+    ]);
     try {
       await this.flightRouteRepository.update(
         { id },

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsBoolean, IsDate, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreatePlanePositionDto {
   @IsDate()
@@ -11,6 +11,10 @@ export class CreatePlanePositionDto {
   @IsOptional()
   @Type(() => Date)
   endTime?: Date;
+
+  @IsBoolean()
+  @IsOptional()
+  thePlaneTookOff?: boolean;
 
   @IsNumber()
   @IsNotEmpty()

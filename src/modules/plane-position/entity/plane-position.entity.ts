@@ -13,6 +13,9 @@ export class PlanePosition {
   @Column('timestamp', { nullable: true })
   endTime?: Date;
 
+  @Column({ default: false })
+  thePlaneTookOff: boolean;
+
   @ManyToOne(() => Plane)
   plane: Plane;
 
