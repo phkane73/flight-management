@@ -25,7 +25,7 @@ export class RunwayController {
   }
 
   @Patch('update')
-  updateRunway(@Body() updateRunwayDto: UpdateRunwayDto): Promise<Response<Runway>> {
-    return this.runwayService.updateRunway(updateRunwayDto);
+  updateRunway(@Body() updateRunwayDtoList: UpdateRunwayDto[]): Promise<Response<Runway>> {
+    return this.runwayService.updateRunway(updateRunwayDtoList);
   }
 }

@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/common/interface/error.interface';
+import { Pagination } from 'src/common/interface/pagination.interface';
 import { AirportService } from 'src/modules/airport/airport.service';
 import { FlightRouteService } from 'src/modules/flight-route/flight-route.service';
 import { CreatePlanePositionDto } from 'src/modules/plane-position/dto/create-plane-position.dto';
 import { MovePlaneDto } from 'src/modules/plane-position/dto/move-plane.dto';
+import { SearchPlanePositionDto } from 'src/modules/plane-position/dto/search-plane-position.dto';
 import { UpdatePlanePositionDto } from 'src/modules/plane-position/dto/update-plane-position.dto';
 import { PlanePosition } from 'src/modules/plane-position/entity/plane-position.entity';
 import { PlaneService } from 'src/modules/plane/plane.service';
@@ -13,7 +15,7 @@ import { Repository } from 'typeorm';
 export class PlanePositionService {
   constructor(
     @InjectRepository(PlanePosition)
-    private planePositionRepository: Repository<PlanePosition>,
+    private readonly planePositionRepository: Repository<PlanePosition>,
     private readonly airportService: AirportService,
     private readonly planeService: PlaneService,
     private readonly flightRouteService: FlightRouteService,
@@ -76,7 +78,10 @@ export class PlanePositionService {
     const { id, airportId, planeId, startTime, endTime, thePlaneTookOff } = updatePlanePositionDto;
 
     const [planePosition, airport, plane, allPlaneAtAirport] = await Promise.all([
-      this.planePositionRepository.findOneBy({ id }),
+      this.planePositionRepository.findOne({
+        where: { id },
+        relations: { airport: true, plane: true },
+      }),
       this.airportService.findAirportById(airportId),
       this.planeService.findPlaneById(planeId),
       this.getAllPlaneAtAirport(airportId),
@@ -87,13 +92,13 @@ export class PlanePositionService {
         message: 'Plane Position do not exist',
       };
     }
-    if (airport?.maxLoad <= allPlaneAtAirport.length) {
+    if (airportId !== planePosition.airport.id && airport?.maxLoad <= allPlaneAtAirport.length) {
       return {
         code: 400,
         message: 'Airport full position',
       };
     }
-    if (plane) {
+    if (plane && planeId !== planePosition.plane.id) {
       const isPlanePosition = await this.planePositionRepository.findOne({
         where: { plane, thePlaneTookOff: false },
       });
@@ -109,7 +114,7 @@ export class PlanePositionService {
       airport,
       plane,
       endTime,
-      thePlaneTookOff
+      thePlaneTookOff,
     });
     return {
       code: 200,
@@ -117,16 +122,68 @@ export class PlanePositionService {
     };
   }
 
-  async getAllPlanePosition(): Promise<PlanePosition[]> {
-    return this.planePositionRepository.find({
-      relations: {
-        airport: true,
-        plane: true,
-      },
-      order: {
-        startTime: 'DESC',
-      },
-    });
+  // async getAllPlanePosition(searchPlanePosition: SearchPlanePositionDto): Promise<PlanePosition[]> {
+  //   return this.planePositionRepository.find({
+  //     relations: {
+  //       airport: true,
+  //       plane: true,
+  //     },
+  //     order: {
+  //       startTime: 'DESC',
+  //     },
+  //   });
+  // }
+
+  async getPlanesHaveNoPosition() {
+    const [planes, planePositionList] = await Promise.all([
+      this.planeService.getAllPlane(),
+      this.planePositionRepository.find({
+        relations: {
+          plane: true,
+        },
+      }),
+    ]);
+    const planeList = new Set(planePositionList.map((item) => item.plane.id));
+    const planesWithoutPosition = planes.filter((plane) => !planeList.has(plane.id));
+    return planesWithoutPosition;
+  }
+
+  async getAllPlanePosition(
+    searchPlanePosition: SearchPlanePositionDto,
+  ): Promise<Pagination<PlanePosition>> {
+    const { page, limit, airportCode, planeName, thePlaneTookOff } = searchPlanePosition;
+    const queryBuilder = this.planePositionRepository
+      .createQueryBuilder('planePosition')
+      .leftJoinAndSelect('planePosition.airport', 'airport')
+      .leftJoinAndSelect('planePosition.plane', 'plane')
+      .orderBy('planePosition.startTime', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (airportCode) {
+      queryBuilder.andWhere('airport.airportCode ILIKE :airportCode', {
+        airportCode: `%${airportCode}%`,
+      });
+    }
+
+    if (planeName) {
+      queryBuilder.andWhere('plane.planeName ILIKE :planeName', { planeName: `%${planeName}%` });
+    }
+
+    if (thePlaneTookOff !== undefined) {
+      queryBuilder.andWhere('planePosition.thePlaneTookOff = :thePlaneTookOff', {
+        thePlaneTookOff,
+      });
+    }
+
+    const [result, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: result,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    };
   }
 
   async getAllPlaneAtAirport(airportId: number) {
@@ -147,7 +204,7 @@ export class PlanePositionService {
 
   async movePlane(movePlaneDto: MovePlaneDto): Promise<Response<PlanePosition>> {
     const { planeId, airportId } = movePlaneDto;
-    const [ airport, allPlaneAtAirport] = await Promise.all([
+    const [airport, allPlaneAtAirport] = await Promise.all([
       this.airportService.findAirportById(airportId),
       this.getAllPlaneAtAirport(airportId),
     ]);
@@ -164,7 +221,7 @@ export class PlanePositionService {
       };
     }
     const isPlanePosition = await this.planePositionRepository.findOne({
-      where: { plane: { id: planeId }, thePlaneTookOff:false },
+      where: { plane: { id: planeId }, thePlaneTookOff: false },
       relations: {
         airport: true,
       },
@@ -187,7 +244,11 @@ export class PlanePositionService {
     }
     const endTime = new Date(isPlanePosition.startTime.getTime() + 3600000);
 
-    const updateResult = await this.updatePlanePosition({ id: isPlanePosition.id, endTime, thePlaneTookOff: true });
+    const updateResult = await this.updatePlanePosition({
+      id: isPlanePosition.id,
+      endTime,
+      thePlaneTookOff: true,
+    });
     if (updateResult.code === 200) {
       const newPlanePositionStartTime = new Date(
         endTime.getTime() + +flightRoute.flightRouteEstTime,

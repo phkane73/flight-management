@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BookServiceModule } from './book-service/book-service.module';
 import { AirportModule } from './modules/airport/airport.module';
 import { FlightRouteModule } from './modules/flight-route/flight-route.module';
 import { FlightModule } from './modules/flight/flight.module';
@@ -38,6 +39,8 @@ import { RunwayModule } from './modules/runway/runway.module';
     FlightModule,
     FlightRouteModule,
     RunwayModule,
+    BookServiceModule,
+    // BookServiceGrpcModule,
   ],
   controllers: [AppController],
   providers: [AppService],

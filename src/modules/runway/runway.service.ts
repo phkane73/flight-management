@@ -50,9 +50,13 @@ export class RunwayService {
     };
   }
 
-  async updateRunway(updateRunwayDto: UpdateRunwayDto): Promise<Response<Runway>> {
-    const { id } = updateRunwayDto;
-    await this.runwayRepository.update(id, { ...updateRunwayDto });
+  async updateRunway(updateRunwayDtoList: UpdateRunwayDto[]): Promise<Response<Runway>> {
+    await Promise.all(
+      updateRunwayDtoList.map(async (updateRunwayDto) => {
+        const { id } = updateRunwayDto;
+        return this.runwayRepository.update(id, { ...updateRunwayDto });
+      }),
+    );
     return {
       code: 200,
       message: 'Update runway successfully',

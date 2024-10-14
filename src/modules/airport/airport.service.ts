@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 export class AirportService {
   constructor(
     @InjectRepository(Airport)
-    private airportRepository: Repository<Airport>,
+    private readonly airportRepository: Repository<Airport>,
   ) {}
 
   async addAirport(createAirportDto: CreateAirportDto): Promise<Response<Airport>> {
@@ -41,7 +41,11 @@ export class AirportService {
   }
 
   async getAllAirport(): Promise<Airport[]> {
-    return await this.airportRepository.find();
+    return await this.airportRepository.find({
+      relations: {
+        runways: true,
+      },
+    });
   }
 
   async getAirportIsOperating(): Promise<Airport[]> {
@@ -62,19 +66,6 @@ export class AirportService {
 
   async updateAirport(updateAirportDto: UpdateAirportDto) {
     const { id } = updateAirportDto;
-    if (updateAirportDto.airportCode) {
-      const isExist = await this.airportRepository.findOne({
-        where: {
-          airportCode: updateAirportDto.airportCode,
-        },
-      });
-      if (isExist) {
-        return {
-          code: 400,
-          message: 'Airport already exists',
-        };
-      }
-    }
     await this.airportRepository.update(id, {
       ...updateAirportDto,
     });

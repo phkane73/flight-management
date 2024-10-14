@@ -16,7 +16,7 @@ export class Runway {
   @Column('timestamp', { nullable: true })
   availableTime?: Date;
 
-  @Column()
+  @Column({ default: false })
   isOperating: boolean;
 
   @ManyToOne(() => Airport, (airport) => airport.runways)
