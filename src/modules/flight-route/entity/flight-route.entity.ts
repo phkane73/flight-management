@@ -17,4 +17,7 @@ export class FlightRoute {
 
   @ManyToOne(() => Airport)
   arrivalAirport: Airport;
+
+  @Column({ default: false })
+  isOperating: boolean;
 }

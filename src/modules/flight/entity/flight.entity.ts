@@ -1,4 +1,4 @@
-import { FlightRoute } from 'src/modules/flight-route/entity/flight-route.entity';
+import { Airport } from 'src/modules/airport/entity/airport.entity';
 import { Plane } from 'src/modules/plane/entity/plane.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -16,8 +16,11 @@ export class Flight {
   @Column('timestamp')
   departureTime: Date;
 
-  @ManyToOne(() => FlightRoute)
-  flightRoute: FlightRoute;
+  @ManyToOne(() => Airport)
+  departureAirport: Airport;
+
+  @ManyToOne(() => Airport)
+  arrivalAirport: Airport;
 
   @ManyToOne(() => Plane)
   plane: Plane;

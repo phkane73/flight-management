@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 export class FlightRouteService {
   constructor(
     @InjectRepository(FlightRoute)
-    private flightRouteRepository: Repository<FlightRoute>,
+    private readonly flightRouteRepository: Repository<FlightRoute>,
     private readonly airportService: AirportService,
   ) {}
 
@@ -67,6 +67,10 @@ export class FlightRouteService {
     };
   }
 
+  async getFlightRouteIsOperating() {
+    return this.flightRouteRepository.findBy({ isOperating: true });
+  }
+
   async getAllFlightRoute() {
     return this.flightRouteRepository.find({
       relations: {
@@ -86,16 +90,42 @@ export class FlightRouteService {
     });
   }
 
+  async getFlightRouteByAirportId(airportId: number) {
+    return this.flightRouteRepository.find({
+      where: [
+        {
+          arrivalAirport: { id: airportId, isOperating: true },
+          departureAirport: { isOperating: true },
+          isOperating: true,
+        },
+        {
+          departureAirport: { id: airportId, isOperating: true },
+          arrivalAirport: { isOperating: true },
+          isOperating: true,
+        },
+      ],
+      relations: {
+        departureAirport: true,
+        arrivalAirport: true,
+      },
+      order: {
+        flightRouteEstTime: 'ASC'
+      }
+    });
+  }
+
   async getFlightRouteByAirport(airportId1: number, airportId2: number) {
     const result = await this.flightRouteRepository.findOne({
       where: [
         {
-          departureAirport: { id: airportId1 },
-          arrivalAirport: { id: airportId2 },
+          departureAirport: { id: airportId1, isOperating: true },
+          arrivalAirport: { id: airportId2, isOperating: true },
+          isOperating: true,
         },
         {
-          departureAirport: { id: airportId2 },
-          arrivalAirport: { id: airportId1 },
+          departureAirport: { id: airportId2, isOperating: true },
+          arrivalAirport: { id: airportId1, isOperating: true },
+          isOperating: true,
         },
       ],
     });
@@ -105,9 +135,20 @@ export class FlightRouteService {
   async updateFlightRoute(
     updateFlightRouteDto: UpdateFlightRouteDto,
   ): Promise<Response<FlightRoute>> {
-    const { id, flightRouteEstTime, flightRoutePrice, departureAirportId, arrivalAirportId } =
-      updateFlightRouteDto;
-    const flightRouteList = await this.flightRouteRepository.find();
+    const {
+      id,
+      flightRouteEstTime,
+      flightRoutePrice,
+      departureAirportId,
+      arrivalAirportId,
+      isOperating,
+    } = updateFlightRouteDto;
+    const flightRouteList = await this.flightRouteRepository.find({
+      relations: {
+        departureAirport: true,
+        arrivalAirport: true,
+      },
+    });
     const isExistFlightRoute = flightRouteList.find(
       (item) =>
         (item.departureAirport.id === departureAirportId &&
@@ -115,10 +156,10 @@ export class FlightRouteService {
         (item.departureAirport.id === arrivalAirportId &&
           item.arrivalAirport.id === departureAirportId),
     );
-    if (isExistFlightRoute) {
+    if (!isExistFlightRoute) {
       return {
         code: 400,
-        message: 'Flight Route already exist',
+        message: 'Flight Route not found',
       };
     }
     const [departureAirport, arrivalAirport] = await Promise.all([
@@ -128,7 +169,7 @@ export class FlightRouteService {
     try {
       await this.flightRouteRepository.update(
         { id },
-        { departureAirport, arrivalAirport, flightRouteEstTime, flightRoutePrice },
+        { departureAirport, arrivalAirport, flightRouteEstTime, flightRoutePrice, isOperating },
       );
       return {
         code: 200,

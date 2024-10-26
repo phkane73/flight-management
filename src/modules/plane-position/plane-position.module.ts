@@ -6,6 +6,7 @@ import { PlanePosition } from 'src/modules/plane-position/entity/plane-position.
 import { PlaneModule } from 'src/modules/plane/plane.module';
 import { PlanePositionController } from './plane-position.controller';
 import { PlanePositionService } from './plane-position.service';
+import { RunwayModule } from 'src/modules/runway/runway.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PlanePositionService } from './plane-position.service';
     AirportModule,
     PlaneModule,
     FlightRouteModule,
+    RunwayModule
   ],
   controllers: [PlanePositionController],
   providers: [PlanePositionService],

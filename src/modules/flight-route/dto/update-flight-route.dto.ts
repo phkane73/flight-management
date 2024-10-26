@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class UpdateFlightRouteDto {
   @IsNumber()
@@ -19,4 +19,8 @@ export class UpdateFlightRouteDto {
   @IsNumber()
   @IsOptional()
   arrivalAirportId?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  isOperating?: boolean;
 }
