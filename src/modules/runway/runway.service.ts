@@ -89,7 +89,6 @@ export class RunwayService {
   }
 
   async getRunwayByAirportId(airportId: number): Promise<Runway[]> {
-    console.log('first')
     return this.runwayRepository.find({
       where: {
         airport: {

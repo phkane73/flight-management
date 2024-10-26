@@ -7,9 +7,10 @@ import { FlightRouteModule } from 'src/modules/flight-route/flight-route.module'
 import { PlaneModule } from 'src/modules/plane/plane.module';
 import { PlanePositionModule } from 'src/modules/plane-position/plane-position.module';
 import { AirportModule } from 'src/modules/airport/airport.module';
+import { FlightScheduleModule } from 'src/flight-schedule/flight-schedule.module';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([Flight]), FlightRouteModule, PlaneModule, PlanePositionModule, AirportModule],
+  imports:[TypeOrmModule.forFeature([Flight]), FlightRouteModule, PlaneModule, PlanePositionModule, AirportModule, FlightScheduleModule],
   controllers: [FlightController],
   providers: [FlightService],
 })

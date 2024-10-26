@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -42,6 +43,11 @@ export class PlanePositionController {
     @Body() updatePlanePositionDto: UpdatePlanePositionDto,
   ): Promise<Response<PlanePosition>> {
     return this.planePositionService.updatePlanePosition(updatePlanePositionDto);
+  }
+
+  @Delete('delete/:id')
+  deletePlanePosition(@Param('id') id: number): Promise<Response<PlanePosition>> {
+    return this.planePositionService.deletePlanePosition(id);
   }
 
   @Get('get-all-plane/:airportId')

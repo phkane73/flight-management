@@ -179,6 +179,14 @@ export class PlanePositionService {
     };
   }
 
+  async deletePlanePosition(id: number): Promise<Response<PlanePosition>> {
+    await this.planePositionRepository.delete(id);
+    return {
+      code: 200,
+      message: 'Delete plane position successfully',
+    };
+  }
+
   async getAllPlaneAtAirport(airportId: number) {
     const planePositionList = await this.planePositionRepository.find({
       where: {

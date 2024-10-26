@@ -1,3 +1,4 @@
+import { FlightSchedule } from 'src/flight-schedule/entity/flight-schedule.entity';
 import { Airport } from 'src/modules/airport/entity/airport.entity';
 import { Plane } from 'src/modules/plane/entity/plane.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
@@ -24,4 +25,7 @@ export class Flight {
 
   @ManyToOne(() => Plane)
   plane: Plane;
+
+  @ManyToOne(() => FlightSchedule, { onDelete: 'CASCADE' })
+  flightSchedule: FlightSchedule;
 }

@@ -10,6 +10,7 @@ import { FlightModule } from './modules/flight/flight.module';
 import { PlanePositionModule } from './modules/plane-position/plane-position.module';
 import { PlaneModule } from './modules/plane/plane.module';
 import { RunwayModule } from './modules/runway/runway.module';
+import { FlightScheduleModule } from './flight-schedule/flight-schedule.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { RunwayModule } from './modules/runway/runway.module';
     FlightRouteModule,
     RunwayModule,
     BookServiceModule,
+    FlightScheduleModule,
     // BookServiceGrpcModule,
   ],
   controllers: [AppController],
