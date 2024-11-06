@@ -1,19 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/common/interface/error.interface';
-import { FlightSchedule } from 'src/flight-schedule/entity/flight-schedule.entity';
-import { FlightScheduleService } from 'src/flight-schedule/flight-schedule.service';
 import { AirportService } from 'src/modules/airport/airport.service';
 import { Airport } from 'src/modules/airport/entity/airport.entity';
 import { FlightRoute } from 'src/modules/flight-route/entity/flight-route.entity';
 import { FlightRouteService } from 'src/modules/flight-route/flight-route.service';
+import { FlightSchedule } from 'src/modules/flight-schedule/entity/flight-schedule.entity';
+import { FlightScheduleService } from 'src/modules/flight-schedule/flight-schedule.service';
+import { FlightDto } from 'src/modules/flight/dto/flight.dto';
 import { GenerateFlightDto } from 'src/modules/flight/dto/generate-flight.dto';
 import { Flight } from 'src/modules/flight/entity/flight.entity';
 import { PlanePositionService } from 'src/modules/plane-position/plane-position.service';
 import { Plane } from 'src/modules/plane/entity/plane.entity';
 import { PlaneService } from 'src/modules/plane/plane.service';
 import { Repository } from 'typeorm';
-
 @Injectable()
 export class FlightService {
   constructor(
@@ -199,10 +199,10 @@ export class FlightService {
     });
 
     if (!flightSchedule) {
-       throw new HttpException(
-         'Flight schedules overlapping. Please check start time and end time of the schedule',
-         HttpStatus.BAD_REQUEST,
-       );
+      throw new HttpException(
+        'Flight schedules overlapping. Please check start time and end time of the schedule',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     const flightRoutesMap = await this.initializeFlightRoutesMap(airports);
     while (initialScheduleTime < endFlightScheduleTime) {
@@ -224,5 +224,49 @@ export class FlightService {
       message: 'Generate flights successfully',
       data: flights,
     };
+  }
+
+  async getAllFlightByFlightScheduleId(id: number): Promise<Flight[]> {
+    return this.flightRepository.find({
+      where: { flightSchedule: { id } },
+      relations: { departureAirport: true, arrivalAirport: true, plane: true },
+      order: { departureTime: 'ASC' },
+    });
+  }
+
+  async checkFlightIsExist(flightDto: FlightDto): Promise<Flight> {
+    const { arrivalAirportId, departureAirportId, departureTime } = flightDto;
+    const dateOnly = departureTime.toISOString().split('T')[0];
+
+    const result = await this.flightRepository
+      .createQueryBuilder('flight')
+      .where('flight.departureAirportId = :departureAirportId', { departureAirportId })
+      .andWhere('flight.arrivalAirportId = :arrivalAirportId', { arrivalAirportId })
+      .andWhere('DATE(flight.departureTime) = :dateOnly', { dateOnly })
+      .getOne();
+    return result;
+  }
+
+  async findFlights(id: number): Promise<{ data: Flight[]; price: string }> {
+    const flight = await this.flightRepository.findOne({
+      where: { id },
+      relations: { departureAirport: true, arrivalAirport: true },
+    });
+    const { departureAirport, arrivalAirport, departureTime } = flight;
+    const departureAirportId = departureAirport.id;
+    const arrivalAirportId = arrivalAirport.id;
+    const [flights, price] = await Promise.all([
+      this.flightRepository
+        .createQueryBuilder('flight')
+        .leftJoinAndSelect('flight.departureAirport', 'departureAirport')
+        .leftJoinAndSelect('flight.arrivalAirport', 'arrivalAirport')
+        .leftJoinAndSelect('flight.plane', 'plane')
+        .where('flight.departureAirportId = :departureAirportId', { departureAirportId })
+        .andWhere('flight.arrivalAirportId = :arrivalAirportId', { arrivalAirportId })
+        .andWhere('DATE(flight.departureTime) = :departureTime', { departureTime })
+        .getMany(),
+      this.flightRouteService.getPriceOfFlight(departureAirportId, arrivalAirportId),
+    ]);
+    return {data: flights, price};
   }
 }

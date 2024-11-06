@@ -182,4 +182,22 @@ export class FlightRouteService {
       };
     }
   }
+
+  async getPriceOfFlight(airportId1: number, airportId2: number) {
+    const result = await this.flightRouteRepository.findOne({
+      where: [
+        {
+          departureAirport: { id: airportId1, isOperating: true },
+          arrivalAirport: { id: airportId2, isOperating: true },
+          isOperating: true,
+        },
+        {
+          departureAirport: { id: airportId2, isOperating: true },
+          arrivalAirport: { id: airportId1, isOperating: true },
+          isOperating: true,
+        },
+      ],
+    });
+    return result.flightRoutePrice
+  }
 }

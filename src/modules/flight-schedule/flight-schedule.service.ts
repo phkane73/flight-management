@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Response } from 'src/common/interface/error.interface';
 import { Pagination } from 'src/common/interface/pagination.interface';
-import { CreateFlightScheduleDto } from 'src/flight-schedule/dto/create-flight-schedule.dto';
-import { SearchFlightScheduleDto } from 'src/flight-schedule/dto/search-flight-schedule.dto';
-import { FlightSchedule } from 'src/flight-schedule/entity/flight-schedule.entity';
+import { CreateFlightScheduleDto } from 'src/modules/flight-schedule/dto/create-flight-schedule.dto';
+import { SearchFlightScheduleDto } from 'src/modules/flight-schedule/dto/search-flight-schedule.dto';
+import { FlightSchedule } from 'src/modules/flight-schedule/entity/flight-schedule.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -35,21 +35,21 @@ export class FlightScheduleService {
     const flightSchedule = await this.flightScheduleRepository.findOne({
       where: { id: flightScheduleId },
       relations: {
-        flights: true
+        flights: true,
       },
     });
 
     if (!flightSchedule) {
-       return {
-         code: 400,
-         message: 'No found flight schedule',
-       };
+      return {
+        code: 400,
+        message: 'No found flight schedule',
+      };
     }
     await this.flightScheduleRepository.remove(flightSchedule);
     return {
       code: 200,
-      message:"Delete flight schedule successfully"
-    }
+      message: 'Delete flight schedule successfully',
+    };
   }
 
   async getAllFlightSchedule(
@@ -58,10 +58,9 @@ export class FlightScheduleService {
     const { page, limit, startTimeSchedule, endTimeSchedule, approved } = searchFlightScheduleDto;
     const queryBuilder = this.flightScheduleRepository
       .createQueryBuilder('flightSchedule')
-      .orderBy('flightSchedule.startTimeSchedule')
+      .orderBy('flightSchedule.startTimeSchedule', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
-
     if (startTimeSchedule) {
       queryBuilder.andWhere('flightSchedule.startTimeSchedule >= :startTimeSchedule', {
         startTimeSchedule,
@@ -86,5 +85,19 @@ export class FlightScheduleService {
       totalPages: Math.ceil(total / limit),
       currentPage: page,
     };
+  }
+
+  async checkApprove(id: number) {
+    return this.flightScheduleRepository.findOne({ where: { id, approved: true } });
+  }
+
+  async approveFlightSchedule(id: number): Promise<Response<FlightSchedule>> {
+    const updateResult = await this.flightScheduleRepository.update({ id }, { approved: true });
+    if (updateResult) {
+      return {
+        code: 200,
+        message: 'Approve flight schedule successfully',
+      };
+    }
   }
 }

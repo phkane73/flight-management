@@ -1,8 +1,18 @@
-import { Controller, Delete, Get, Param, Query, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Pagination } from 'src/common/interface/pagination.interface';
-import { SearchFlightScheduleDto } from 'src/flight-schedule/dto/search-flight-schedule.dto';
-import { FlightSchedule } from 'src/flight-schedule/entity/flight-schedule.entity';
+import { SearchFlightScheduleDto } from 'src/modules/flight-schedule/dto/search-flight-schedule.dto';
+import { FlightSchedule } from 'src/modules/flight-schedule/entity/flight-schedule.entity';
 import { FlightScheduleService } from './flight-schedule.service';
+import { Response } from 'src/common/interface/error.interface';
 
 @Controller('flight-schedule')
 export class FlightScheduleController {
@@ -19,5 +29,15 @@ export class FlightScheduleController {
   @Delete('delete/:id')
   deleteFlightSchedule(@Param('id') id: number) {
     return this.flightScheduleService.deleteFlightSchedule(id);
+  }
+
+  @Get('check-approve/:id')
+  checkApprove(@Param('id') id: number) {
+    return this.flightScheduleService.checkApprove(id);
+  }
+
+  @Patch('approved/:id')
+  approveFlightSchedule(@Param('id') id: number): Promise<Response<FlightSchedule>> {
+    return this.flightScheduleService.approveFlightSchedule(id);
   }
 }

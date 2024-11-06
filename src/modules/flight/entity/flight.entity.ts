@@ -1,5 +1,5 @@
-import { FlightSchedule } from 'src/flight-schedule/entity/flight-schedule.entity';
 import { Airport } from 'src/modules/airport/entity/airport.entity';
+import { FlightSchedule } from 'src/modules/flight-schedule/entity/flight-schedule.entity';
 import { Plane } from 'src/modules/plane/entity/plane.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 

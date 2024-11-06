@@ -6,11 +6,11 @@ import { AppService } from './app.service';
 import { BookServiceModule } from './book-service/book-service.module';
 import { AirportModule } from './modules/airport/airport.module';
 import { FlightRouteModule } from './modules/flight-route/flight-route.module';
+import { FlightScheduleModule } from './modules/flight-schedule/flight-schedule.module';
 import { FlightModule } from './modules/flight/flight.module';
 import { PlanePositionModule } from './modules/plane-position/plane-position.module';
 import { PlaneModule } from './modules/plane/plane.module';
 import { RunwayModule } from './modules/runway/runway.module';
-import { FlightScheduleModule } from './flight-schedule/flight-schedule.module';
 
 @Module({
   imports: [

@@ -4,11 +4,11 @@ import { catchError, Observable, tap } from 'rxjs';
 import { BookServiceService } from './book-service.service';
 
 type BookRequest = {
-  book_id: string;
+  book_id: number;
 };
 
 type BookResponse = {
-  book_id: string;
+  book_id: number;
   name: string;
 };
 
@@ -30,13 +30,7 @@ export class BookServiceController implements OnModuleInit {
   }
 
   @Get()
-  callService(@Query('book_id') book_id: string) {
-    return this.bookService.getBook({ book_id }).pipe(
-      tap((request) => console.log('Request object sent:', request)),
-      catchError((error) => {
-        console.error('Error occurred while calling getBook:', error);
-        throw error;
-      }),
-    );
+  callService(@Query('book_id') book_id: string) : Observable<BookResponse>{
+    return this.bookService.getBook({ book_id: 1 })
   }
 }
