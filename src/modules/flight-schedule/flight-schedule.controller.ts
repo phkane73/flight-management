@@ -35,9 +35,4 @@ export class FlightScheduleController {
   checkApprove(@Param('id') id: number) {
     return this.flightScheduleService.checkApprove(id);
   }
-
-  @Patch('approved/:id')
-  approveFlightSchedule(@Param('id') id: number): Promise<Response<FlightSchedule>> {
-    return this.flightScheduleService.approveFlightSchedule(id);
-  }
 }

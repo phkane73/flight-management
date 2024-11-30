@@ -88,6 +88,16 @@ export class RunwayService {
     }
   }
 
+  async resetAvailableTimes() {
+    const result = await this.runwayRepository.update({}, { availableTime: null });
+    if (result) {
+      return {
+        code: 200,
+        message: 'Reset available time successfully',
+      };
+    }
+  }
+
   async getRunwayByAirportId(airportId: number): Promise<Runway[]> {
     return this.runwayRepository.find({
       where: {

@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Kafka } from 'kafkajs';
 import { Response } from 'src/common/interface/error.interface';
 import { AirportService } from 'src/modules/airport/airport.service';
 import { Airport } from 'src/modules/airport/entity/airport.entity';
@@ -13,9 +14,18 @@ import { Flight } from 'src/modules/flight/entity/flight.entity';
 import { PlanePositionService } from 'src/modules/plane-position/plane-position.service';
 import { Plane } from 'src/modules/plane/entity/plane.entity';
 import { PlaneService } from 'src/modules/plane/plane.service';
+import { RunwayTypeEnum } from 'src/modules/runway/enum/runway-type.enum';
+import { RunwayService } from 'src/modules/runway/runway.service';
 import { Repository } from 'typeorm';
 @Injectable()
 export class FlightService {
+  private readonly kafka = new Kafka({
+    clientId: 'flight-management',
+    brokers: ['localhost:9092'],
+  });
+
+  private readonly producer = this.kafka.producer();
+
   constructor(
     @InjectRepository(Flight)
     private readonly flightRepository: Repository<Flight>,
@@ -24,6 +34,7 @@ export class FlightService {
     private readonly planePositionService: PlanePositionService,
     private readonly airportService: AirportService,
     private readonly flightScheduleService: FlightScheduleService,
+    private readonly runwayService: RunwayService,
   ) {}
 
   private generateFlightCode(planeName: string): string {
@@ -184,15 +195,41 @@ export class FlightService {
     return { updatedScheduleTime, stop };
   }
 
+  async checkRunwayOperatingOfAirports(airports: Airport[]): Promise<string> {
+    for (const airport of airports) {
+      const [runwayLanding, runwayTakeOff] = await Promise.all([
+        this.runwayService.getRunwaysByAirportAndType(airport.id, RunwayTypeEnum.Landing),
+        this.runwayService.getRunwaysByAirportAndType(airport.id, RunwayTypeEnum.TakeOff),
+      ]);
+
+      if (runwayLanding.length < 1) {
+        return `${airport.airportName} does not have enough runway for landing`;
+      } else if (runwayTakeOff.length < 1) {
+        return `${airport.airportName} does not have enough runway for takeoff`;
+      }
+    }
+    return null;
+  }
+
   async generateFlights(generateFlightDto: GenerateFlightDto): Promise<Response<Flight[]>> {
     const { startFlightScheduleTime, endFlightScheduleTime } = generateFlightDto;
     const flights: Flight[] = [];
     let initialScheduleTime: Date = startFlightScheduleTime;
     const [airports, planes] = await this.loadOperatingAirportsAndPlanes();
 
-    if (airports.length === 0 || planes.length === 0) {
-      throw new HttpException('No airport or plane found', HttpStatus.BAD_REQUEST);
+    if (airports.length < 2) {
+      throw new HttpException('List of airports operating fewer than two', HttpStatus.BAD_REQUEST);
     }
+    if (planes.length === 0) {
+      throw new HttpException('No plane is operating', HttpStatus.BAD_REQUEST);
+    }
+
+    const checkRunwayBefore = await this.checkRunwayOperatingOfAirports(airports)
+    if (checkRunwayBefore) {
+      throw new HttpException(checkRunwayBefore, HttpStatus.BAD_REQUEST);
+    }
+
+    await this.runwayService.resetAvailableTimes();
     const flightSchedule = await this.flightScheduleService.createFlightSchedule({
       startTimeSchedule: startFlightScheduleTime,
       endTimeSchedule: endFlightScheduleTime,
@@ -240,9 +277,11 @@ export class FlightService {
 
     const result = await this.flightRepository
       .createQueryBuilder('flight')
+      .leftJoinAndSelect('flight.flightSchedule', 'flightSchedule')
       .where('flight.departureAirportId = :departureAirportId', { departureAirportId })
       .andWhere('flight.arrivalAirportId = :arrivalAirportId', { arrivalAirportId })
       .andWhere('DATE(flight.departureTime) = :dateOnly', { dateOnly })
+      .andWhere('flightSchedule.approved = :approved', { approved: true })
       .getOne();
     return result;
   }
@@ -267,6 +306,70 @@ export class FlightService {
         .getMany(),
       this.flightRouteService.getPriceOfFlight(departureAirportId, arrivalAirportId),
     ]);
-    return {data: flights, price};
+    return { data: flights, price };
+  }
+
+  async approveFlightSchedule(id: number): Promise<Response<FlightSchedule>> {
+    const updateResult = await this.flightScheduleService.approve(id);
+    if (updateResult) {
+      const flightsOfFlightSchedule = (await this.getAllFlightByFlightScheduleId(id)).map(
+        (item) => item.id,
+      );
+      await this.sendApprovedFlights(flightsOfFlightSchedule);
+      return {
+        code: 200,
+        message: 'Approve flight schedule successfully',
+      };
+    }
+  }
+
+  async sendApprovedFlights(flightListIds: number[]) {
+    const flightDtos = flightListIds.map((flightId) => ({
+      flightId: flightId,
+    }));
+    await this.producer.connect();
+    flightDtos.forEach(async (item) => {
+      await this.producer.send({
+        topic: 'approvedFlights',
+        messages: [
+          {
+            value: JSON.stringify(item),
+          },
+        ],
+      });
+      await this.producer.disconnect();
+    });
+  }
+
+  async getFlightById(id: number) {
+    const flight = await this.flightRepository.findOne({
+      where: { id },
+      relations: {
+        departureAirport: true,
+        arrivalAirport: true,
+      },
+    });
+    const price = await this.flightRouteService.getPriceOfFlight(
+      flight.departureAirport.id,
+      flight.arrivalAirport.id,
+    );
+    return { flight, price };
+  }
+
+  async getFlightByIds(ids: number[]) {
+    const uniqueIds = Array.from(new Set(ids));
+    const flights: Flight[] = [];
+    for (const id of uniqueIds) {
+      const flight = await this.flightRepository.findOne({
+        where: { id },
+        relations: {
+          departureAirport: true,
+          arrivalAirport: true,
+          plane: true,
+        },
+      });
+      if (flight) flights.push(flight);
+    }
+    return flights;
   }
 }

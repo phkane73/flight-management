@@ -267,7 +267,7 @@ export class PlanePositionService {
         ? takeOffTime
         : new Date(isPlanePosition.startTime.getTime() + 3600000);
 
-    const newPlanePositionStartTime = new Date(endTime.getTime() + + flightRouteEstTime);
+    const newPlanePositionStartTime = new Date(endTime.getTime() + +flightRouteEstTime);
 
     return { endTime, newPlanePositionStartTime };
   }
@@ -287,11 +287,7 @@ export class PlanePositionService {
   async movePlane(movePlaneDto: MovePlaneDto): Promise<Response<PlanePosition>> {
     const { planeId, airportId, takeOffTime, endTimeFlightSchedule } = movePlaneDto;
 
-    const runwayCheck = await this.runwayService.checkRunwayAvailableBefore(takeOffTime);
-    if (runwayCheck) {
-      return { code: 400, message: 'No Runway available before take off time' };
-    }
-      const planeAirportStatus = await this.checkPlaneAndAirportStatus(planeId, airportId);
+    const planeAirportStatus = await this.checkPlaneAndAirportStatus(planeId, airportId);
     if (planeAirportStatus.code !== 200) {
       return { code: planeAirportStatus.code, message: planeAirportStatus.message };
     }

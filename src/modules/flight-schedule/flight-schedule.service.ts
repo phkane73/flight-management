@@ -91,13 +91,7 @@ export class FlightScheduleService {
     return this.flightScheduleRepository.findOne({ where: { id, approved: true } });
   }
 
-  async approveFlightSchedule(id: number): Promise<Response<FlightSchedule>> {
-    const updateResult = await this.flightScheduleRepository.update({ id }, { approved: true });
-    if (updateResult) {
-      return {
-        code: 200,
-        message: 'Approve flight schedule successfully',
-      };
-    }
+  async approve(id: number) {
+    return await this.flightScheduleRepository.update({ id }, { approved: true });
   }
 }

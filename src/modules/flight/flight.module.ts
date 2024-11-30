@@ -8,6 +8,7 @@ import { PlanePositionModule } from 'src/modules/plane-position/plane-position.m
 import { PlaneModule } from 'src/modules/plane/plane.module';
 import { FlightController } from './flight.controller';
 import { FlightService } from './flight.service';
+import { RunwayModule } from 'src/modules/runway/runway.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { FlightService } from './flight.service';
     PlanePositionModule,
     AirportModule,
     FlightScheduleModule,
+    RunwayModule
   ],
   controllers: [FlightController],
   providers: [FlightService],
